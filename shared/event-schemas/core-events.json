@@ -1,0 +1,300 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Aktienanalyse-Ökosystem Core Event Schemas",
+  "description": "Event-Schema-Registry für alle 8 Core Event-Types",
+  
+  "definitions": {
+    "base_event": {
+      "type": "object",
+      "required": ["event_id", "event_type", "stream_id", "stream_type", "timestamp", "version"],
+      "properties": {
+        "event_id": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Unique event identifier"
+        },
+        "event_type": {
+          "type": "string",
+          "enum": [
+            "analysis.state.changed",
+            "portfolio.state.changed", 
+            "trading.state.changed",
+            "intelligence.triggered",
+            "data.synchronized",
+            "system.alert.raised",
+            "user.interaction.logged",
+            "config.updated"
+          ]
+        },
+        "stream_id": {
+          "type": "string",
+          "description": "Aggregate identifier (e.g., stock-AAPL, portfolio-123)"
+        },
+        "stream_type": {
+          "type": "string",
+          "enum": ["stock", "portfolio", "trading", "system", "user", "config"]
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "correlation_id": {
+          "type": "string",
+          "format": "uuid",
+          "description": "For tracing related events"
+        },
+        "causation_id": {
+          "type": "string", 
+          "format": "uuid",
+          "description": "Event that caused this event"
+        }
+      }
+    }
+  },
+
+  "events": {
+    "analysis.state.changed": {
+      "allOf": [
+        {"$ref": "#/definitions/base_event"},
+        {
+          "properties": {
+            "event_type": {"const": "analysis.state.changed"},
+            "stream_type": {"const": "stock"},
+            "data": {
+              "type": "object",
+              "required": ["symbol", "state", "score"],
+              "properties": {
+                "symbol": {"type": "string", "pattern": "^[A-Z]{1,5}$"},
+                "state": {
+                  "type": "string",
+                  "enum": ["requested", "processing", "completed", "failed"]
+                },
+                "score": {"type": "number", "minimum": -20, "maximum": 20},
+                "recommendation": {
+                  "type": "string",
+                  "enum": ["STRONG_BUY", "BUY", "HOLD", "SELL", "STRONG_SELL"]
+                },
+                "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+                "target_price": {"type": "number", "minimum": 0},
+                "risk_level": {
+                  "type": "string", 
+                  "enum": ["LOW", "MEDIUM", "HIGH", "VERY_HIGH"]
+                },
+                "technical_indicators": {
+                  "type": "object",
+                  "properties": {
+                    "rsi": {"type": "number", "minimum": 0, "maximum": 100},
+                    "macd": {"type": "string", "enum": ["bullish", "bearish", "neutral"]},
+                    "moving_averages": {"type": "string", "enum": ["golden_cross", "death_cross", "neutral"]}
+                  }
+                },
+                "error_message": {"type": "string"}
+              }
+            }
+          }
+        }
+      ]
+    },
+
+    "portfolio.state.changed": {
+      "allOf": [
+        {"$ref": "#/definitions/base_event"},
+        {
+          "properties": {
+            "event_type": {"const": "portfolio.state.changed"},
+            "stream_type": {"const": "portfolio"},
+            "data": {
+              "type": "object",
+              "required": ["portfolio_id", "state"],
+              "properties": {
+                "portfolio_id": {"type": "string"},
+                "state": {
+                  "type": "string",
+                  "enum": ["calculating", "updated", "optimized", "rebalanced"]
+                },
+                "performance_metrics": {
+                  "type": "object",
+                  "properties": {
+                    "total_return": {"type": "number"},
+                    "total_return_percent": {"type": "number"},
+                    "sharpe_ratio": {"type": "number"},
+                    "max_drawdown": {"type": "number"},
+                    "volatility": {"type": "number"},
+                    "beta": {"type": "number"},
+                    "alpha": {"type": "number"}
+                  }
+                },
+                "top_performers": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "symbol": {"type": "string"},
+                      "return": {"type": "number"},
+                      "weight": {"type": "number"}
+                    }
+                  }
+                },
+                "risk_assessment": {
+                  "type": "string",
+                  "enum": ["CONSERVATIVE", "MODERATE", "AGGRESSIVE", "VERY_AGGRESSIVE"]
+                },
+                "rebalancing_suggestions": {
+                  "type": "array",
+                  "items": {
+                    "type": "object", 
+                    "properties": {
+                      "action": {"type": "string", "enum": ["BUY", "SELL", "REDUCE", "INCREASE"]},
+                      "symbol": {"type": "string"},
+                      "reason": {"type": "string"},
+                      "suggested_weight": {"type": "number"}
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+
+    "trading.state.changed": {
+      "allOf": [
+        {"$ref": "#/definitions/base_event"},
+        {
+          "properties": {
+            "event_type": {"const": "trading.state.changed"},
+            "stream_type": {"const": "trading"},
+            "data": {
+              "type": "object",
+              "required": ["order_id", "state"],
+              "properties": {
+                "order_id": {"type": "string"},
+                "state": {
+                  "type": "string",
+                  "enum": ["created", "submitted", "partially_filled", "filled", "cancelled", "rejected"]
+                },
+                "symbol": {"type": "string"},
+                "side": {"type": "string", "enum": ["BUY", "SELL"]},
+                "order_type": {"type": "string", "enum": ["MARKET", "LIMIT", "STOP", "STOP_LIMIT"]},
+                "quantity": {"type": "number", "minimum": 0},
+                "price": {"type": "number", "minimum": 0},
+                "filled_quantity": {"type": "number", "minimum": 0},
+                "average_fill_price": {"type": "number", "minimum": 0},
+                "total_value": {"type": "number"},
+                "fees": {"type": "number", "minimum": 0},
+                "broker": {"type": "string", "enum": ["bitpanda_pro"]},
+                "execution_timestamp": {"type": "string", "format": "date-time"},
+                "reason": {"type": "string"}
+              }
+            }
+          }
+        }
+      ]
+    },
+
+    "intelligence.triggered": {
+      "allOf": [
+        {"$ref": "#/definitions/base_event"},
+        {
+          "properties": {
+            "event_type": {"const": "intelligence.triggered"},
+            "stream_type": {"const": "system"},
+            "data": {
+              "type": "object", 
+              "required": ["trigger_type", "correlation_score"],
+              "properties": {
+                "trigger_type": {
+                  "type": "string",
+                  "enum": ["performance_comparison", "correlation_detected", "auto_import_opportunity", "rebalancing_suggestion"]
+                },
+                "correlation_score": {"type": "number", "minimum": 0, "maximum": 1},
+                "analysis_results": {
+                  "type": "object",
+                  "properties": {
+                    "aktienanalyse_score": {"type": "number"},
+                    "auswertung_performance": {"type": "number"},
+                    "current_depot_ranking": {"type": "integer"}
+                  }
+                },
+                "recommendation": {
+                  "type": "object",
+                  "required": ["action", "confidence"],
+                  "properties": {
+                    "action": {
+                      "type": "string",
+                      "enum": ["AUTO_IMPORT", "REBALANCE", "ALERT", "NO_ACTION"]
+                    },
+                    "symbol": {"type": "string"},
+                    "reason": {"type": "string"},
+                    "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+                    "expected_impact": {"type": "number"}
+                  }
+                },
+                "affected_systems": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "enum": ["aktienanalyse", "auswertung", "verwaltung", "data-web-app"]
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+
+    "system.alert.raised": {
+      "allOf": [
+        {"$ref": "#/definitions/base_event"},
+        {
+          "properties": {
+            "event_type": {"const": "system.alert.raised"},
+            "stream_type": {"const": "system"},
+            "data": {
+              "type": "object",
+              "required": ["alert_type", "severity", "message"],
+              "properties": {
+                "alert_type": {
+                  "type": "string",
+                  "enum": [
+                    "performance_degradation", "service_down", "high_memory_usage",
+                    "trading_loss", "analysis_failure", "broker_connection_error",
+                    "data_inconsistency", "security_breach"
+                  ]
+                },
+                "severity": {
+                  "type": "string",
+                  "enum": ["INFO", "WARNING", "ERROR", "CRITICAL"]
+                },
+                "message": {"type": "string"},
+                "affected_services": {
+                  "type": "array",
+                  "items": {"type": "string"}
+                },
+                "metrics": {
+                  "type": "object",
+                  "properties": {
+                    "cpu_usage": {"type": "number"},
+                    "memory_usage": {"type": "number"},
+                    "query_time": {"type": "number"},
+                    "error_rate": {"type": "number"}
+                  }
+                },
+                "resolution_status": {
+                  "type": "string",
+                  "enum": ["OPEN", "IN_PROGRESS", "RESOLVED", "IGNORED"]
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}
