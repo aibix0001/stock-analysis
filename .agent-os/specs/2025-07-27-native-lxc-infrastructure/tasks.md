@@ -23,13 +23,13 @@ These are the tasks to be completed for the spec detailed in @.agent-os/specs/20
   - [x] 2.5 Create requirements.txt templates for each service
   - [ ] 2.6 Verify all tests pass
 
-- [ ] 3. Database Infrastructure (PostgreSQL and Redis)
-  - [ ] 3.1 Write tests for database installations and configurations
-  - [ ] 3.2 Install and configure PostgreSQL 15+
-  - [ ] 3.3 Create event store database and schema
-  - [ ] 3.4 Set up Redis 3-node cluster configuration
-  - [ ] 3.5 Configure persistence and clustering for Redis
-  - [ ] 3.6 Create database initialization scripts
+- [x] 3. Database Infrastructure (PostgreSQL and Redis)
+  - [x] 3.1 Write tests for database installations and configurations
+  - [x] 3.2 Install and configure PostgreSQL 15+
+  - [x] 3.3 Create event store database and schema
+  - [x] 3.4 Set up Redis 3-node cluster configuration
+  - [x] 3.5 Configure persistence and clustering for Redis
+  - [x] 3.6 Create database initialization scripts
   - [ ] 3.7 Verify all tests pass
 
 - [ ] 4. Message Queue and Service Templates
