@@ -13,7 +13,7 @@ These are the tasks to be completed for the spec detailed in @.agent-os/specs/20
   - [x] 1.3 Configure network settings (10.1.1.120/24)
   - [x] 1.4 Install base Debian 12 packages and system dependencies
   - [x] 1.5 Create directory structure for stock-analysis ecosystem
-  - [ ] 1.6 Verify all tests pass
+  - [x] 1.6 Verify all tests pass
 
 - [x] 2. Python Environment and Package Management
   - [x] 2.1 Write tests for Python and uv installation
@@ -21,7 +21,7 @@ These are the tasks to be completed for the spec detailed in @.agent-os/specs/20
   - [x] 2.3 Install uv package manager
   - [x] 2.4 Create virtual environments for all 5 services
   - [x] 2.5 Create requirements.txt templates for each service
-  - [ ] 2.6 Verify all tests pass
+  - [x] 2.6 Verify all tests pass
 
 - [x] 3. Database Infrastructure (PostgreSQL and Redis)
   - [x] 3.1 Write tests for database installations and configurations
@@ -30,7 +30,7 @@ These are the tasks to be completed for the spec detailed in @.agent-os/specs/20
   - [x] 3.4 Set up Redis 3-node cluster configuration
   - [x] 3.5 Configure persistence and clustering for Redis
   - [x] 3.6 Create database initialization scripts
-  - [ ] 3.7 Verify all tests pass
+  - [x] 3.7 Verify all tests pass
 
 - [x] 4. Message Queue and Service Templates
   - [x] 4.1 Write tests for RabbitMQ and systemd services
@@ -38,12 +38,12 @@ These are the tasks to be completed for the spec detailed in @.agent-os/specs/20
   - [x] 4.3 Create systemd service template files
   - [x] 4.4 Configure service environment files
   - [x] 4.5 Implement basic health check endpoints
-  - [ ] 4.6 Test service start/stop/restart functionality
-  - [ ] 4.7 Verify all tests pass
+  - [x] 4.6 Test service start/stop/restart functionality
+  - [x] 4.7 Verify all tests pass
 
-- [ ] 5. Integration Testing and Documentation
-  - [ ] 5.1 Write comprehensive integration tests
-  - [ ] 5.2 Test inter-service communication
-  - [ ] 5.3 Validate performance targets (<0.2s queries)
-  - [ ] 5.4 Create operational documentation
-  - [ ] 5.5 Run full test suite and ensure all tests pass
+- [x] 5. Integration Testing and Documentation
+  - [x] 5.1 Write comprehensive integration tests
+  - [x] 5.2 Test inter-service communication
+  - [x] 5.3 Validate performance targets (<0.2s queries)
+  - [x] 5.4 Create operational documentation
+  - [x] 5.5 Run full test suite and ensure all tests pass
