@@ -236,6 +236,84 @@ eventStream.on('message', (event) => {
 });
 ```
 
+## 🚀 **Deployment**
+
+### **Native LXC Deployment (Proxmox)**
+
+The project includes a complete LXC template system for easy deployment on Proxmox VE:
+
+#### **Quick Start:**
+
+1. **Build the LXC Template** (on build host with debootstrap):
+   ```bash
+   sudo ./lxc-template/build-lxc-template.sh
+   # Creates: stock-analysis-debian12-1.0.0-YYYYMMDD.tar.gz
+   ```
+
+2. **Deploy on Proxmox**:
+   ```bash
+   # Copy template to Proxmox
+   scp stock-analysis-debian12-*.tar.gz root@proxmox:/var/lib/vz/template/cache/
+   
+   # Create container (on Proxmox host)
+   ./lxc-template/create-proxmox-container.sh 120 /var/lib/vz/template/cache/stock-analysis-debian12-*.tar.gz
+   ```
+
+3. **Access Services** (after automatic first-boot):
+   - Intelligent Core: `http://<container-ip>:8001/health`
+   - Broker Gateway: `http://<container-ip>:8002/health`
+   - Event Bus: `http://<container-ip>:8003/health`
+   - Monitoring: `http://<container-ip>:8004/health`
+   - Frontend API: `http://<container-ip>:8005/health`
+   - RabbitMQ Management: `http://<container-ip>:15672`
+
+#### **Template Features:**
+- **Debian 12** with all dependencies pre-installed
+- **PostgreSQL 15** with Event Store schema
+- **Redis** for caching and pub/sub
+- **RabbitMQ** for message queuing
+- **Python 3.11** with uv package manager
+- **Automatic initialization** on first boot
+- **systemd service** management
+- **Health check endpoints** for all services
+
+#### **Resource Requirements:**
+- Minimum RAM: 4 GB
+- Minimum CPU: 2 cores
+- Minimum Disk: 20 GB
+- Network: DHCP or static IP
+
+#### **Default Credentials:**
+- System: `stock-analysis` / `changeme`
+- PostgreSQL: `stock_analysis` / `secure_password`
+- RabbitMQ: `stock_analysis` / `stock_password`
+
+⚠️ **Change all default passwords after deployment!**
+
+For detailed deployment instructions, see [lxc-template/README.md](lxc-template/README.md).
+
+### **Manual Installation**
+
+For manual installation without LXC template:
+
+```bash
+# Clone repository
+git clone https://github.com/your-org/stock-analysis.git
+cd stock-analysis
+
+# Run native setup (Debian 12)
+sudo ./scripts/setup-lxc-native.sh
+
+# Initialize Python environments
+./scripts/setup-python-env.sh
+
+# Create systemd services
+sudo ./scripts/create-systemd-service.sh all
+
+# Start all services
+sudo systemctl start stock-analysis-*
+```
+
 ## 🔧 **Development**
 
 ### **Event-Driven Development Pattern:**
