@@ -15,12 +15,12 @@ These are the tasks to be completed for the spec detailed in @.agent-os/specs/20
   - [x] 1.5 Create directory structure for stock-analysis ecosystem
   - [ ] 1.6 Verify all tests pass
 
-- [ ] 2. Python Environment and Package Management
-  - [ ] 2.1 Write tests for Python and uv installation
-  - [ ] 2.2 Install Python 3.11+ from Debian repositories
-  - [ ] 2.3 Install uv package manager
-  - [ ] 2.4 Create virtual environments for all 5 services
-  - [ ] 2.5 Create requirements.txt templates for each service
+- [x] 2. Python Environment and Package Management
+  - [x] 2.1 Write tests for Python and uv installation
+  - [x] 2.2 Install Python 3.11+ from Debian repositories
+  - [x] 2.3 Install uv package manager
+  - [x] 2.4 Create virtual environments for all 5 services
+  - [x] 2.5 Create requirements.txt templates for each service
   - [ ] 2.6 Verify all tests pass
 
 - [ ] 3. Database Infrastructure (PostgreSQL and Redis)
