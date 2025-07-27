@@ -32,12 +32,12 @@ These are the tasks to be completed for the spec detailed in @.agent-os/specs/20
   - [x] 3.6 Create database initialization scripts
   - [ ] 3.7 Verify all tests pass
 
-- [ ] 4. Message Queue and Service Templates
-  - [ ] 4.1 Write tests for RabbitMQ and systemd services
-  - [ ] 4.2 Install and configure RabbitMQ
-  - [ ] 4.3 Create systemd service template files
-  - [ ] 4.4 Configure service environment files
-  - [ ] 4.5 Implement basic health check endpoints
+- [x] 4. Message Queue and Service Templates
+  - [x] 4.1 Write tests for RabbitMQ and systemd services
+  - [x] 4.2 Install and configure RabbitMQ
+  - [x] 4.3 Create systemd service template files
+  - [x] 4.4 Configure service environment files
+  - [x] 4.5 Implement basic health check endpoints
   - [ ] 4.6 Test service start/stop/restart functionality
   - [ ] 4.7 Verify all tests pass
 
