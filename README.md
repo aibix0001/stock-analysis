@@ -93,7 +93,7 @@ aktienanalyse-ökosystem/
 │   ├── config/                     # Shared Configuration
 │   └── utils/                      # Common Utilities
 ├── docs/                          # Architecture Documentation
-├── deployment/                    # Docker & Infrastructure
+├── deployment/                    # LXC & systemd Infrastructure
 ├── tests/                         # Comprehensive Test Suite
 └── scripts/                       # Development & Deployment Scripts
 ```
@@ -101,39 +101,54 @@ aktienanalyse-ökosystem/
 ## 🚀 **Quick Start**
 
 ### **Prerequisites:**
-- Docker & Docker Compose
+- Native LXC Container (Debian 12)
 - Node.js 18+ & Python 3.11+
-- PostgreSQL 15+ & Redis 7+
+- PostgreSQL 15+ & Redis 7+ (native installation)
+- systemd für Service-Management
 
 ### **Development Setup:**
 ```bash
 # Clone Repository
-git clone https://github.com/MarcoFPO/aktienanalyse-ökosystem.git
-cd aktienanalyse-ökosystem
+git clone https://github.com/MarcoFPO/aktienanalyse--kosystem.git
+cd aktienanalyse--kosystem
 
-# Start Infrastructure (PostgreSQL + Redis)
-docker-compose up -d postgres redis
+# Check Package Requirements
+./scripts/check-current-packages.sh
+
+# Install Required Packages (wenn nötig)
+sudo apt update && sudo apt install -y postgresql redis-server rabbitmq-server python3 nodejs
 
 # Setup Event-Store Schema
 ./scripts/setup-event-store.sh
 
-# Start All Services
-./scripts/start-all-services.sh
+# Start systemd Services
+sudo systemctl enable --now postgresql redis-server rabbitmq-server
+sudo systemctl start aktienanalyse.target
 
 # Access Dashboard
-open http://localhost:3000
+open https://localhost:443
 ```
 
 ### **Production Deployment:**
 ```bash
-# LXC Container Setup
-./deployment/setup-lxc-container.sh
+# LXC Container erstellen (auf Proxmox Host)
+lxc launch ubuntu:22.04 aktienanalyse-lxc
+lxc config set aktienanalyse-lxc limits.cpu 4
+lxc config set aktienanalyse-lxc limits.memory 6GB
+lxc config set aktienanalyse-lxc limits.disk 50GB
 
-# Production Environment
-./scripts/deploy-production.sh
+# In LXC Container wechseln
+lxc exec aktienanalyse-lxc -- bash
 
-# Monitoring Dashboard
-open https://your-domain.com/monitoring
+# Automatische Installation aller Pakete
+./scripts/install-all-packages.sh
+
+# systemd Services konfigurieren
+sudo systemctl enable aktienanalyse.target
+sudo systemctl start aktienanalyse.target
+
+# Monitoring Dashboard (Port 443 HTTPS)
+open https://10.1.1.120:443
 ```
 
 ## 📊 **Performance Benchmarks**
@@ -153,6 +168,13 @@ open https://your-domain.com/monitoring
 | CPU Usage | 85% | 35% | **-59%** |
 | Disk I/O | High (8 DBs) | Low (1 Event-Store) | **-78%** |
 | Network Latency | 180ms | 12ms | **-93%** |
+
+### **Hardware-Anforderungen (LXC):**
+| Konfiguration | RAM | CPU | Disk | Use Case |
+|---------------|-----|-----|------|----------|
+| **Minimum** | 4 GB | 2 vCPU | 20 GB | Development/Testing |
+| **Empfohlen** | 6 GB | 4 vCPU | 50 GB | Production Single-User |
+| **Optimal** | 8 GB | 6 vCPU | 100 GB | ML-Training + Reserves |
 
 ## 🎯 **Core Features**
 
