@@ -1,0 +1,59 @@
+# Stock Analysis LXC Template Metadata
+# Format: Proxmox template data file
+
+[template]
+name = stock-analysis-debian12
+version = 1.0.0
+type = lxc
+os = debian
+osversion = 12
+arch = amd64
+description = Stock Analysis Ecosystem - Event-driven trading intelligence platform
+
+[requirements]
+min_pve_version = 7.0
+min_memory = 4096
+min_cores = 2
+min_disk = 20G
+features = nesting,keyctl
+
+[info]
+author = Stock Analysis Team
+email = support@stock-analysis.local
+website = https://github.com/stock-analysis
+license = MIT
+created = 2024-01-01
+updated = 2024-01-01
+
+[services]
+postgresql = 15
+redis = 7.0
+rabbitmq = 3.12
+python = 3.11
+systemd = 252
+
+[network]
+ports = 22,5432,6379,5672,15672,8001,8002,8003,8004,8005
+protocols = tcp
+firewall = optional
+
+[users]
+default_user = stock-analysis
+default_password = changeme
+sudo_enabled = yes
+
+[paths]
+app_root = /opt/stock-analysis
+config_dir = /etc/stock-analysis
+log_dir = /var/log/stock-analysis
+data_dir = /var/lib/stock-analysis
+
+[startup]
+firstboot_service = stock-analysis-firstboot
+init_time = 120
+auto_start_services = postgresql,redis-server,rabbitmq-server
+
+[backup]
+include = /opt/stock-analysis,/etc/stock-analysis,/var/lib/postgresql,/var/lib/redis
+exclude = /opt/stock-analysis/venvs,/var/log
+compression = gzip
