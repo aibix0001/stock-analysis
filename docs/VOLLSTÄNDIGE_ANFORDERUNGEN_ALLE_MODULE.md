@@ -328,10 +328,9 @@ Das **aktienanalyse-ökosystem** besteht aus **4 Teilprojekten**, die jeweils in
 - **Responsive Design**: Mobile-first Design für alle Devices
 
 #### Authentication & Navigation
-- **Single Sign-On**: Unified Authentication für alle 4 Projekte
-- **Multi-Project Navigation**: Seamless Navigation zwischen Projekten
-- **Role-based Access**: Future-proof für Multi-User-Scenarios
-- **Session Management**: Secure Session-Handling
+- **Single-User Authentication**: Einfache Session-basierte Authentifizierung für einen Benutzer (mdoehler)
+- **Project Navigation**: Nahtlose Navigation zwischen allen 4 Projektbereichen
+- **Session Management**: Secure Session-Handling für einzelnen Benutzer
 
 ### Modul 18: 📈 **aktienanalyse-ui Modul**
 
@@ -398,11 +397,11 @@ Das **aktienanalyse-ökosystem** besteht aus **4 Teilprojekten**, die jeweils in
 - **Caching Layer**: Frontend-side Caching für Performance
 - **WebSocket Management**: Centralized WebSocket-Connection-Management
 
-#### Authentication & Security
-- **Token Management**: JWT-Token für alle Backend-Services
+#### Authentication & Security (Single-User)
+- **Simple Session Management**: Session-basierte Authentifizierung für mdoehler
 - **Session Persistence**: Persistent Sessions across Browser-Refreshes
-- **API Rate Limiting**: Frontend-side Rate-Limiting
-- **Security Headers**: HTTPS, CORS, CSP Implementation
+- **Internal API Access**: Direct Backend-Access ohne JWT-Komplexität
+- **HTTPS-Only**: Port 443 externe Erreichbarkeit, Security Headers (CORS, CSP)
 
 ---
 
@@ -417,30 +416,39 @@ Event-Bus (Redis Pub/Sub):
 └── data-web-app Events → aktienanalyse + auswertung + verwaltung
 ```
 
-### Unified API Gateway (Port 443/HTTPS)
+### Unified HTTPS Gateway (Port 443 - Externe Erreichbarkeit)
 ```
-NGINX Reverse Proxy:
-├── /api/aktienanalyse/*     → aktienanalyse:8001
-├── /api/auswertung/*        → auswertung:8002
-├── /api/verwaltung/*        → verwaltung:8003
-└── /api/frontend/*          → data-web-app:8004
+NGINX Reverse Proxy (nur Port 443 von außen):
+├── / (Frontend)             → data-web-app:8004 (React SPA)
+├── /api/aktienanalyse/*     → aktienanalyse:8001 (intern)
+├── /api/auswertung/*        → auswertung:8002 (intern)
+├── /api/verwaltung/*        → verwaltung:8003 (intern)
+└── /ws/* (WebSocket)        → event-bus:8005 (intern)
+
+# Externe Erreichbarkeit: NUR Port 443 (HTTPS)
+# Interne Services: Ports 8001-8005 (nicht extern erreichbar)
 ```
 
-## 📊 **Deployment-Architektur: LXC Container**
+## 📊 **Deployment-Architektur: Nativer LXC-Container (Keine Docker/Virtualisierung)**
 
-### Single Container - Modular Services
+### Single LXC Container - Native systemd Services
 ```
 LXC aktienanalyse-lxc-120 (10.1.1.174):
-├── aktienanalyse-service (4 Module)
-├── auswertung-service (4 Module) 
-├── verwaltung-service (8 Module)
-├── frontend-service (6 Module)
-├── shared-infrastructure/
-│   ├── redis-event-bus/
-│   ├── nginx-gateway/
-│   ├── sqlite-databases/
-│   └── monitoring-stack/
-└── systemd-services/ (4 Services)
+├── 📈 aktienanalyse-service (systemd, Port 8001)
+├── 🧮 auswertung-service (systemd, Port 8002) 
+├── 💼 verwaltung-service (systemd, Port 8003)
+├── 🌐 frontend-service (systemd, Port 8004)
+├── 🔄 event-bus-service (systemd, Port 8005)
+├── shared-infrastructure/ (native installiert)
+│   ├── redis-server (systemd)
+│   ├── nginx (systemd, Port 443 extern)
+│   ├── postgresql (systemd)
+│   └── zabbix-agent (systemd)
+└── 👤 Single-User: mdoehler (Linux User)
+
+# KEINE Container-Virtualisierung (Docker/Podman)
+# NUR native LXC mit systemd Services
+# Externe Erreichbarkeit: NUR Port 443 (HTTPS)
 ```
 
 Diese **vollständige Anforderungsübersicht** deckt alle **4 Teilprojekte** mit **22 Modulen** ab und zeigt die komplette Integration des aktienanalyse-ökosystems.
