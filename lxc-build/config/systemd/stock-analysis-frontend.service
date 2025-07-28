@@ -1,0 +1,28 @@
+[Unit]
+Description=Stock Analysis Frontend Service
+After=network.target postgresql.service redis.service rabbitmq-server.service
+Wants=postgresql.service redis.service rabbitmq-server.service
+
+[Service]
+Type=simple
+User=stock-analysis
+Group=stock-analysis
+WorkingDirectory=/opt/stock-analysis
+Environment="PATH=/opt/stock-analysis/venvs/frontend/bin:/usr/local/bin:/usr/bin:/bin"
+EnvironmentFile=/etc/stock-analysis/stock-analysis-frontend.env
+ExecStart=/opt/stock-analysis/venvs/frontend/bin/python -m uvicorn app:app --host 0.0.0.0 --port 8005
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=stock-analysis-frontend
+
+# Security settings
+PrivateTmp=true
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/stock-analysis
+
+[Install]
+WantedBy=multi-user.target

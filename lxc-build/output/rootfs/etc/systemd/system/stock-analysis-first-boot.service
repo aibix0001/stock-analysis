@@ -1,0 +1,14 @@
+[Unit]
+Description=Stock Analysis First Boot Setup
+After=network.target
+ConditionPathExists=!/opt/stock-analysis/.first-boot-complete
+
+[Service]
+Type=oneshot
+ExecStart=/opt/stock-analysis/first-boot.sh
+RemainAfterExit=yes
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

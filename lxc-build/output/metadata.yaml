@@ -1,0 +1,25 @@
+architecture: x86_64
+creation_date: 1753734467
+properties:
+  name: stock-analysis-lxc-template
+  description: Stock Analysis LXC Template with Event-Driven Architecture
+  os: debian
+  release: bookworm
+  version: "12"
+  variant: default
+templates:
+  /etc/hostname:
+    when:
+      - create
+      - rename
+    template: hostname.tpl
+  /etc/hosts:
+    when:
+      - create
+      - rename
+    template: hosts.tpl
+  /etc/network/interfaces:
+    when:
+      - create
+    template: interfaces.tpl
+    create_only: true

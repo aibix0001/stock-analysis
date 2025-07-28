@@ -1,0 +1,75 @@
+{
+    "vhosts": [
+        {
+            "name": "/stock-analysis"
+        }
+    ],
+    "exchanges": [
+        {
+            "name": "stock-analysis-events",
+            "vhost": "/stock-analysis",
+            "type": "topic",
+            "durable": true,
+            "auto_delete": false
+        },
+        {
+            "name": "stock-analysis-dlx",
+            "vhost": "/stock-analysis",
+            "type": "topic",
+            "durable": true,
+            "auto_delete": false
+        }
+    ],
+    "queues": [
+        {
+            "name": "broker-gateway-events",
+            "vhost": "/stock-analysis",
+            "durable": true,
+            "auto_delete": false,
+            "arguments": {
+                "x-dead-letter-exchange": "stock-analysis-dlx"
+            }
+        },
+        {
+            "name": "intelligent-core-events",
+            "vhost": "/stock-analysis",
+            "durable": true,
+            "auto_delete": false,
+            "arguments": {
+                "x-dead-letter-exchange": "stock-analysis-dlx"
+            }
+        },
+        {
+            "name": "event-bus-events",
+            "vhost": "/stock-analysis",
+            "durable": true,
+            "auto_delete": false,
+            "arguments": {
+                "x-dead-letter-exchange": "stock-analysis-dlx"
+            }
+        }
+    ],
+    "bindings": [
+        {
+            "source": "stock-analysis-events",
+            "vhost": "/stock-analysis",
+            "destination": "broker-gateway-events",
+            "destination_type": "queue",
+            "routing_key": "broker.*"
+        },
+        {
+            "source": "stock-analysis-events",
+            "vhost": "/stock-analysis",
+            "destination": "intelligent-core-events",
+            "destination_type": "queue",
+            "routing_key": "analysis.*"
+        },
+        {
+            "source": "stock-analysis-events",
+            "vhost": "/stock-analysis",
+            "destination": "event-bus-events",
+            "destination_type": "queue",
+            "routing_key": "#"
+        }
+    ]
+}

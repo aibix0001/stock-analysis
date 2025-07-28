@@ -7,14 +7,14 @@ These are the tasks to be completed for the spec detailed in @.agent-os/specs/20
 
 ## Tasks
 
-- [ ] 1. Create LXC template build script
-  - [ ] 1.1 Write tests for template builder functionality
-  - [ ] 1.2 Implement base template creation logic
-  - [ ] 1.3 Add Debian 12 configuration
-  - [ ] 1.4 Implement systemd service templates
-  - [ ] 1.5 Add network configuration (DHCP)
-  - [ ] 1.6 Create build verification tests
-  - [ ] 1.7 Verify all tests pass
+- [x] 1. Create LXC template build script
+  - [x] 1.1 Write tests for template builder functionality
+  - [x] 1.2 Implement base template creation logic
+  - [x] 1.3 Add Debian 12 configuration
+  - [x] 1.4 Implement systemd service templates
+  - [x] 1.5 Add network configuration (DHCP)
+  - [x] 1.6 Create build verification tests
+  - [x] 1.7 Verify all tests pass
 
 - [ ] 2. Develop service deployment automation
   - [ ] 2.1 Write tests for deployment scripts
