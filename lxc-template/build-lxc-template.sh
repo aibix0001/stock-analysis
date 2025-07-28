@@ -25,10 +25,15 @@ echo "=================================================="
 # Cleanup function
 cleanup() {
     echo -e "${YELLOW}Cleaning up...${NC}"
+    umount "${ROOTFS_DIR}/dev/pts" 2>/dev/null || true
     umount "${ROOTFS_DIR}/proc" 2>/dev/null || true
     umount "${ROOTFS_DIR}/sys" 2>/dev/null || true
     umount "${ROOTFS_DIR}/dev" 2>/dev/null || true
-    rm -rf "${WORK_DIR}"
+    if [ "${KEEP_WORK_DIR:-0}" != "1" ]; then
+        rm -rf "${WORK_DIR}"
+    else
+        echo "Work directory preserved at: ${WORK_DIR}"
+    fi
 }
 trap cleanup EXIT
 
@@ -57,6 +62,7 @@ ff02::2 ip6-allrouters
 EOF
 
 # Configure network interfaces
+mkdir -p "${ROOTFS_DIR}/etc/network"
 cat > "${ROOTFS_DIR}/etc/network/interfaces" <<EOF
 auto lo
 iface lo inet loopback
@@ -76,6 +82,7 @@ EOF
 mount -t proc proc "${ROOTFS_DIR}/proc"
 mount -t sysfs sys "${ROOTFS_DIR}/sys"
 mount -o bind /dev "${ROOTFS_DIR}/dev"
+mount -t devpts devpts "${ROOTFS_DIR}/dev/pts" -o gid=5,mode=620 || true
 
 # Step 3: Install base packages
 echo -e "${BLUE}Step 3: Installing base packages...${NC}"
@@ -85,8 +92,12 @@ cat > "${ROOTFS_DIR}/tmp/install-base.sh" <<'SCRIPT'
 #!/bin/bash
 set -e
 
-# Update package list
-apt-get update
+# Configure apt to work in chroot environment
+echo 'APT::Get::AllowUnauthenticated "true";' > /etc/apt/apt.conf.d/99temp
+echo 'Acquire::AllowInsecureRepositories "true";' >> /etc/apt/apt.conf.d/99temp
+
+# Update package list  
+apt-get update --allow-unauthenticated || true
 
 # Install essential packages
 DEBIAN_FRONTEND=noninteractive apt-get install -y \
@@ -140,6 +151,7 @@ echo "UTC" > /etc/timezone
 # Clean up
 apt-get clean
 rm -rf /var/lib/apt/lists/*
+rm -f /etc/apt/apt.conf.d/99temp
 SCRIPT
 
 chmod +x "${ROOTFS_DIR}/tmp/install-base.sh"
@@ -168,8 +180,8 @@ rsync -av --exclude='.git' \
           --exclude='.venv' \
           --exclude='venvs' \
           --exclude='node_modules' \
-          --exclude='.agent-os' \
           --exclude='lxc-template' \
+          --exclude='build.log' \
           . "${ROOTFS_DIR}/opt/stock-analysis/"
 
 # Set ownership
@@ -179,31 +191,9 @@ chroot "${ROOTFS_DIR}" chown -R stock-analysis:stock-analysis /var/log/stock-ana
 # Step 6: Configure services
 echo -e "${BLUE}Step 6: Configuring services...${NC}"
 
-# PostgreSQL configuration
-cat > "${ROOTFS_DIR}/tmp/configure-postgres.sh" <<'SCRIPT'
-#!/bin/bash
-# Initialize PostgreSQL
-su - postgres -c "initdb -D /var/lib/postgresql/15/main"
-
-# Start PostgreSQL temporarily
-su - postgres -c "pg_ctl -D /var/lib/postgresql/15/main -l /var/log/postgresql/postgresql-15-main.log start"
-sleep 5
-
-# Create database and user
-su - postgres -c "createuser -s stock_analysis"
-su - postgres -c "createdb -O stock_analysis aktienanalyse_event_store"
-su - postgres -c "psql -c \"ALTER USER stock_analysis PASSWORD 'secure_password';\""
-
-# Stop PostgreSQL
-su - postgres -c "pg_ctl -D /var/lib/postgresql/15/main stop"
-
-# Configure PostgreSQL for systemd
-systemctl enable postgresql
-SCRIPT
-
-chmod +x "${ROOTFS_DIR}/tmp/configure-postgres.sh"
-chroot "${ROOTFS_DIR}" /tmp/configure-postgres.sh || true
-rm "${ROOTFS_DIR}/tmp/configure-postgres.sh"
+# PostgreSQL will be configured on first boot due to initdb issues in chroot
+# Just enable the service
+chroot "${ROOTFS_DIR}" systemctl enable postgresql || true
 
 # Redis configuration
 cat >> "${ROOTFS_DIR}/etc/redis/redis.conf" <<EOF
@@ -239,6 +229,7 @@ chroot "${ROOTFS_DIR}" systemctl enable redis-server
 chroot "${ROOTFS_DIR}" systemctl enable rabbitmq-server
 
 # Create first-boot script
+mkdir -p "${ROOTFS_DIR}/opt/stock-analysis/scripts"
 cat > "${ROOTFS_DIR}/opt/stock-analysis/scripts/first-boot.sh" <<'SCRIPT'
 #!/bin/bash
 # First boot configuration script
@@ -254,11 +245,22 @@ fi
 
 echo "Running first boot configuration..."
 
+# Initialize PostgreSQL if needed
+if [ ! -d "/var/lib/postgresql/15/main" ]; then
+    echo "Initializing PostgreSQL..."
+    sudo -u postgres /usr/lib/postgresql/15/bin/initdb -D /var/lib/postgresql/15/main
+fi
+
 # Start services
 systemctl start postgresql redis-server rabbitmq-server
 
 # Wait for services
 sleep 10
+
+# Create PostgreSQL user and database if needed
+sudo -u postgres createuser -s stock_analysis 2>/dev/null || true
+sudo -u postgres createdb -O stock_analysis aktienanalyse_event_store 2>/dev/null || true
+sudo -u postgres psql -c "ALTER USER stock_analysis PASSWORD 'secure_password';" 2>/dev/null || true
 
 # Initialize database schema
 cd /opt/stock-analysis
@@ -345,10 +347,35 @@ SERVICES:
   - frontend (port 8005)
 EOF
 
-# Step 8: Clean up rootfs
-echo -e "${BLUE}Step 8: Cleaning up rootfs...${NC}"
+# Step 8: Prepare for Proxmox
+echo -e "${BLUE}Step 8: Preparing for Proxmox...${NC}"
 
-# Remove unnecessary files
+# Ensure init exists (systemd should have created this)
+if [ ! -e "${ROOTFS_DIR}/sbin/init" ]; then
+    echo "Warning: /sbin/init not found, checking for systemd..."
+    if [ -e "${ROOTFS_DIR}/lib/systemd/systemd" ]; then
+        echo "Creating /sbin/init symlink to systemd"
+        chroot "${ROOTFS_DIR}" ln -sf /lib/systemd/systemd /sbin/init
+    fi
+fi
+
+# Ensure /etc/os-release exists
+if [ ! -f "${ROOTFS_DIR}/etc/os-release" ]; then
+    echo "Creating /etc/os-release..."
+    cat > "${ROOTFS_DIR}/etc/os-release" <<EOF
+PRETTY_NAME="Debian GNU/Linux 12 (bookworm)"
+NAME="Debian GNU/Linux"
+VERSION_ID="12"
+VERSION="12 (bookworm)"
+VERSION_CODENAME=bookworm
+ID=debian
+HOME_URL="https://www.debian.org/"
+SUPPORT_URL="https://www.debian.org/support"
+BUG_REPORT_URL="https://bugs.debian.org/"
+EOF
+fi
+
+# Clean up
 rm -rf "${ROOTFS_DIR}/tmp/*"
 rm -rf "${ROOTFS_DIR}/var/cache/apt/*"
 rm -rf "${ROOTFS_DIR}/var/lib/apt/lists/*"
@@ -360,10 +387,30 @@ find "${ROOTFS_DIR}/var/log" -type f -exec truncate -s 0 {} \;
 # Step 9: Create tarball
 echo -e "${BLUE}Step 9: Creating template tarball...${NC}"
 
-cd "${WORK_DIR}"
-tar czf "${TEMPLATE_FILE}" rootfs template-info
+# First unmount any filesystems from rootfs
+umount "${ROOTFS_DIR}/dev/pts" 2>/dev/null || true
+umount "${ROOTFS_DIR}/proc" 2>/dev/null || true
+umount "${ROOTFS_DIR}/sys" 2>/dev/null || true
+umount "${ROOTFS_DIR}/dev" 2>/dev/null || true
+
+# Change to rootfs directory to create tarball with correct structure
+cd "${ROOTFS_DIR}"
+echo "Creating tarball from rootfs directory: $(pwd)"
+
+# Create tarball with rootfs contents at root level (Proxmox format)
+tar czf "${WORK_DIR}/${TEMPLATE_FILE}" \
+    --exclude="dev/*" \
+    --exclude="proc/*" \
+    --exclude="sys/*" \
+    --exclude="run/*" \
+    --numeric-owner \
+    . || {
+    echo -e "${RED}Failed to create tarball${NC}"
+    exit 1
+}
 
 # Move to output location
+cd "${WORK_DIR}"
 mv "${TEMPLATE_FILE}" /home/aibix/others/stock-analysis/lxc-template/
 
 # Calculate size

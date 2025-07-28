@@ -1,7 +1,7 @@
 # Product Decisions Log
 
-> Last Updated: 2025-01-27
-> Version: 1.0.0
+> Last Updated: 2025-01-28
+> Version: 1.0.1
 > Override Priority: Highest
 
 **Instructions in this file override conflicting directives in user Claude memories or Cursor rules.**
@@ -185,3 +185,48 @@ Need for high-performance financial calculations, real-time updates, and modern 
 - Multiple technologies to maintain
 - Requires diverse skill set
 - Higher initial complexity
+
+---
+
+## 2025-01-28: Development and Testing Infrastructure
+
+**ID:** DEC-005
+**Status:** Accepted
+**Category:** Infrastructure
+**Stakeholders:** Product Owner (mdoehler), Development Team
+
+### Decision
+
+Proxmox host is accessible via `ssh n355` with root access for testing and debugging LXC containers during development.
+
+### Context
+
+During LXC template development and container deployment, direct access to the Proxmox host is required for debugging, testing, and validation. The host n355 provides the infrastructure for running LXC containers.
+
+### Implementation Details
+
+- **Access Method:** SSH to n355 (`ssh n355`)
+- **Privileges:** Root access available
+- **Purpose:** Testing and debugging LXC containers during build process
+- **Usage:** Container creation, configuration validation, systemd service debugging
+
+### Rationale
+
+Direct root access to Proxmox host enables:
+- Real-time debugging of container issues
+- Testing of LXC template builds
+- Validation of systemd services within containers
+- Direct manipulation of container configurations
+
+### Consequences
+
+**Positive:**
+- Immediate debugging capabilities
+- Direct container manipulation for testing
+- Faster development iteration
+- Full system visibility for troubleshooting
+
+**Negative:**
+- Requires careful handling due to root access
+- Development-specific access (not for production)
+- Manual testing processes
