@@ -14,7 +14,7 @@ Establish the foundational native LXC infrastructure for the stock-analysis ecos
 
 As a system administrator, I want to set up native LXC containers with systemd service templates, so that I can deploy and manage the 5 microservices efficiently without Docker overhead.
 
-The workflow involves creating a Debian 12 LXC container, configuring network settings (10.1.1.120), installing all required system packages, setting up systemd service templates for each microservice, and establishing Python virtual environments using uv for isolated dependencies.
+The workflow involves creating a Debian 12 LXC container, configuring network settings via DHCP, installing all required system packages, setting up systemd service templates for each microservice, and establishing Python virtual environments using uv for isolated dependencies.
 
 ### Event-Driven Communication Infrastructure
 

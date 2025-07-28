@@ -11,7 +11,7 @@ This is the technical specification for the spec detailed in @.agent-os/specs/20
 - **Base OS:** Debian 12 (Bookworm)
 - **Container Type:** Unprivileged LXC
 - **Resources:** 4 vCPUs, 8GB RAM, 50GB storage
-- **Network:** Static IP 10.1.1.120/24
+- **Network:** DHCP (automatic IP assignment)
 - **Hostname:** stock-analysis
 
 ### System Package Requirements
