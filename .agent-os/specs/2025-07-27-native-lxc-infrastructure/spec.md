@@ -6,15 +6,15 @@
 
 ## Overview
 
-Establish the foundational native LXC infrastructure for the stock-analysis ecosystem with systemd service management, Python virtual environments using uv, and core database/messaging systems. This implementation aligns with the "no Docker" deployment strategy documented in decisions.md.
+Create a build system that generates a ready-to-deploy LXC template containing the complete stock-analysis ecosystem. The build process runs on the current development machine and produces a template package (tar.gz) that includes all installation scripts, configuration files, and the full product setup, ready to be deployed on any Proxmox host.
 
 ## User Stories
 
-### Infrastructure Setup and Service Management
+### LXC Template Build System
 
-As a system administrator, I want to set up native LXC containers with systemd service templates, so that I can deploy and manage the 5 microservices efficiently without Docker overhead.
+As a developer, I want to run a build script on my development machine that generates a complete LXC template package, so that I can distribute a ready-to-deploy stock-analysis system without manual installation steps.
 
-The workflow involves creating a Debian 12 LXC container, configuring network settings via DHCP, installing all required system packages, setting up systemd service templates for each microservice, and establishing Python virtual environments using uv for isolated dependencies.
+The workflow involves running a build script that creates all necessary installation scripts, configuration files, systemd service definitions, and packages them into an LXC template structure. When this template is deployed on a Proxmox host, it will automatically set up the complete stock-analysis ecosystem including PostgreSQL, Redis, RabbitMQ, Python environments, and all five microservices.
 
 ### Event-Driven Communication Infrastructure
 
@@ -30,11 +30,11 @@ Each service should expose a /health endpoint that verifies database connections
 
 ## Spec Scope
 
-1. **LXC Container Configuration** - Set up Debian 12 container with network configuration and system packages
-2. **Systemd Service Templates** - Create reusable templates for Python microservices with proper dependencies
-3. **Database Infrastructure** - Install and configure PostgreSQL 15+ with event store schema and user setup
-4. **Messaging Infrastructure** - Set up Redis 3-node cluster and RabbitMQ with exchanges/queues
-5. **Python Environment Setup** - Configure uv for virtual environment management across all services
+1. **Build System Creation** - Develop scripts that run on the build machine to generate the LXC template
+2. **Installation Scripts** - Create automated setup scripts that will run inside the container during deployment
+3. **Configuration Templates** - Generate all configuration files for services, databases, and system components
+4. **Service Definitions** - Create systemd service files for all five microservices with proper dependencies
+5. **Template Packaging** - Package everything into a distributable LXC template format (tar.gz)
 
 ## Out of Scope
 
@@ -46,9 +46,10 @@ Each service should expose a /health endpoint that verifies database connections
 
 ## Expected Deliverable
 
-1. Fully configured LXC container with all system dependencies installed and systemd service templates ready
-2. PostgreSQL Event-Store operational with initial schema and Redis cluster accepting connections
-3. All services can start via systemd and report healthy status through /health endpoints
+1. A build system (`lxc-build/`) that generates LXC templates when run on the development machine
+2. A complete LXC template package (tar.gz) containing all installation scripts and configurations
+3. When deployed, the template automatically installs: PostgreSQL 15+, Redis cluster, RabbitMQ, Python 3.11+, uv, and all stock-analysis services
+4. Documentation for running the build process and deploying the generated template on Proxmox hosts
 
 ## Spec Documentation
 

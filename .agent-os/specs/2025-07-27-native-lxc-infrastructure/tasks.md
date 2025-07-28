@@ -7,43 +7,36 @@ These are the tasks to be completed for the spec detailed in @.agent-os/specs/20
 
 ## Tasks
 
-- [x] 1. LXC Container Setup and Base Configuration
-  - [x] 1.1 Write tests for LXC container configuration
-  - [x] 1.2 Create LXC container setup script (setup-lxc.sh)
-  - [x] 1.3 Configure network settings (10.1.1.120/24)
-  - [x] 1.4 Install base Debian 12 packages and system dependencies
-  - [x] 1.5 Create directory structure for stock-analysis ecosystem
-  - [x] 1.6 Verify all tests pass
+- [ ] 1. Create LXC template build script
+  - [ ] 1.1 Write tests for template builder functionality
+  - [ ] 1.2 Implement base template creation logic
+  - [ ] 1.3 Add Debian 12 configuration
+  - [ ] 1.4 Implement systemd service templates
+  - [ ] 1.5 Add network configuration (DHCP)
+  - [ ] 1.6 Create build verification tests
+  - [ ] 1.7 Verify all tests pass
 
-- [x] 2. Python Environment and Package Management
-  - [x] 2.1 Write tests for Python and uv installation
-  - [x] 2.2 Install Python 3.11+ from Debian repositories
-  - [x] 2.3 Install uv package manager
-  - [x] 2.4 Create virtual environments for all 5 services
-  - [x] 2.5 Create requirements.txt templates for each service
-  - [x] 2.6 Verify all tests pass
+- [ ] 2. Develop service deployment automation
+  - [ ] 2.1 Write tests for deployment scripts
+  - [ ] 2.2 Create Python service deployment script
+  - [ ] 2.3 Implement PostgreSQL setup automation
+  - [ ] 2.4 Add Redis cluster configuration
+  - [ ] 2.5 Implement RabbitMQ setup
+  - [ ] 2.6 Create health check scripts
+  - [ ] 2.7 Verify all tests pass
 
-- [x] 3. Database Infrastructure (PostgreSQL and Redis)
-  - [x] 3.1 Write tests for database installations and configurations
-  - [x] 3.2 Install and configure PostgreSQL 15+
-  - [x] 3.3 Create event store database and schema
-  - [x] 3.4 Set up Redis 3-node cluster configuration
-  - [x] 3.5 Configure persistence and clustering for Redis
-  - [x] 3.6 Create database initialization scripts
-  - [x] 3.7 Verify all tests pass
+- [ ] 3. Implement monitoring and operations tools
+  - [ ] 3.1 Write tests for monitoring integration
+  - [ ] 3.2 Create Zabbix configuration templates
+  - [ ] 3.3 Implement log aggregation setup
+  - [ ] 3.4 Add backup/restore procedures
+  - [ ] 3.5 Create operational runbooks
+  - [ ] 3.6 Verify all tests pass
 
-- [x] 4. Message Queue and Service Templates
-  - [x] 4.1 Write tests for RabbitMQ and systemd services
-  - [x] 4.2 Install and configure RabbitMQ
-  - [x] 4.3 Create systemd service template files
-  - [x] 4.4 Configure service environment files
-  - [x] 4.5 Implement basic health check endpoints
-  - [x] 4.6 Test service start/stop/restart functionality
-  - [x] 4.7 Verify all tests pass
-
-- [x] 5. Integration Testing and Documentation
-  - [x] 5.1 Write comprehensive integration tests
-  - [x] 5.2 Test inter-service communication
-  - [x] 5.3 Validate performance targets (<0.2s queries)
-  - [x] 5.4 Create operational documentation
-  - [x] 5.5 Run full test suite and ensure all tests pass
+- [ ] 4. Create development environment setup
+  - [ ] 4.1 Write tests for dev environment scripts
+  - [ ] 4.2 Create local development setup script
+  - [ ] 4.3 Implement container management helpers
+  - [ ] 4.4 Add debugging and troubleshooting tools
+  - [ ] 4.5 Create developer documentation
+  - [ ] 4.6 Verify all tests pass
