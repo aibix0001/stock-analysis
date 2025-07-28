@@ -6,9 +6,6 @@ set -euo pipefail
 
 # Configuration
 CONTAINER_HOSTNAME="stock-analysis"
-CONTAINER_IP="10.1.1.120/24"
-CONTAINER_GATEWAY="10.1.1.1"
-CONTAINER_DNS="8.8.8.8,8.8.4.4"
 DB_PASSWORD="CHANGE_THIS_PASSWORD"
 REDIS_PASSWORD="CHANGE_THIS_PASSWORD"
 RABBITMQ_PASSWORD="CHANGE_THIS_PASSWORD"
@@ -70,20 +67,30 @@ configure_network() {
         echo "127.0.1.1    $CONTAINER_HOSTNAME" >> /etc/hosts
     fi
     
-    # Configure network interface (assuming eth0)
+    # Configure network interface for DHCP (assuming eth0)
     cat > /etc/network/interfaces.d/eth0 << EOF
 auto eth0
-iface eth0 inet static
-    address ${CONTAINER_IP%/*}
-    netmask 255.255.255.0
-    gateway $CONTAINER_GATEWAY
-    dns-nameservers $CONTAINER_DNS
+iface eth0 inet dhcp
 EOF
+    
+    # Ensure main interfaces file includes the interfaces.d directory
+    if ! grep -q "source /etc/network/interfaces.d/*" /etc/network/interfaces 2>/dev/null; then
+        echo "source /etc/network/interfaces.d/*" >> /etc/network/interfaces
+    fi
     
     # Restart networking
     systemctl restart networking || log_warning "Network restart failed, may need manual restart"
     
-    log_success "Network configuration completed"
+    # Wait for DHCP to assign IP
+    sleep 3
+    
+    # Display assigned IP
+    ip_addr=$(ip -4 addr show eth0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}')
+    if [ -n "$ip_addr" ]; then
+        log_success "Network configured with DHCP. Assigned IP: $ip_addr"
+    else
+        log_warning "No IP address assigned yet. Check DHCP server."
+    fi
 }
 
 # Update system and install base packages
@@ -706,26 +713,58 @@ EOF
 configure_firewall() {
     log_info "Configuring firewall..."
     
+    # Get current network subnet from DHCP-assigned IP
+    local ip_addr=$(ip -4 addr show eth0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}')
+    local subnet=""
+    
+    if [ -n "$ip_addr" ]; then
+        # Extract subnet (assuming /24 for simplicity, could be made more dynamic)
+        subnet=$(echo "$ip_addr" | cut -d. -f1-3).0/24
+        log_info "Detected subnet: $subnet"
+    else
+        log_warning "Could not detect subnet, using permissive rules"
+        subnet="any"
+    fi
+    
     # Enable UFW
     ufw --force enable
     
     # Allow SSH (adjust port as needed)
     ufw allow 22/tcp
     
-    # Allow service ports (internal access only)
+    # Allow service ports
     for port in 8001 8002 8003 8004 8005; do
-        ufw allow from 10.1.1.0/24 to any port $port
+        if [ "$subnet" = "any" ]; then
+            # If no subnet detected, allow from anywhere (less secure)
+            ufw allow $port/tcp
+        else
+            # Restrict to local subnet
+            ufw allow from $subnet to any port $port
+        fi
     done
     
-    # Allow PostgreSQL (internal only)
-    ufw allow from 10.1.1.0/24 to any port 5432
+    # Allow PostgreSQL
+    if [ "$subnet" = "any" ]; then
+        ufw allow 5432/tcp
+    else
+        ufw allow from $subnet to any port 5432
+    fi
     
-    # Allow Redis cluster (internal only)
-    ufw allow from 10.1.1.0/24 to any port 6379:6381/tcp
+    # Allow Redis cluster
+    if [ "$subnet" = "any" ]; then
+        ufw allow 6379:6381/tcp
+    else
+        ufw allow from $subnet to any port 6379:6381/tcp
+    fi
     
-    # Allow RabbitMQ (internal only)
-    ufw allow from 10.1.1.0/24 to any port 5672
-    ufw allow from 10.1.1.0/24 to any port 15672
+    # Allow RabbitMQ
+    if [ "$subnet" = "any" ]; then
+        ufw allow 5672/tcp
+        ufw allow 15672/tcp
+    else
+        ufw allow from $subnet to any port 5672
+        ufw allow from $subnet to any port 15672
+    fi
     
     log_success "Firewall configured"
 }

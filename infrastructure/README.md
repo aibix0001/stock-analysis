@@ -18,7 +18,7 @@ The infrastructure consists of:
    - 4 vCPUs
    - 8GB RAM
    - 50GB disk
-   - Network: 10.1.1.120/24
+   - Network: DHCP (automatic IP assignment)
 
 2. Copy the infrastructure directory to the container:
    ```bash
@@ -67,10 +67,9 @@ Main installation script that:
 
 ### configure-network.sh
 Standalone network configuration for:
-- Static IP: 10.1.1.120/24
-- Gateway: 10.1.1.1
-- DNS: 8.8.8.8, 8.8.4.4
+- DHCP automatic IP assignment
 - Hostname: stock-analysis
+- DNS: Provided by DHCP server
 
 ### init-databases.sh
 Database initialization that:

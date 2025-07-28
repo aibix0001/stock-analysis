@@ -1,15 +1,10 @@
 #!/bin/bash
 # Network configuration script for Stock Analysis LXC container
-# This script configures the container with static IP 10.1.1.120/24
+# This script configures the container with DHCP networking
 
 set -euo pipefail
 
 # Configuration
-CONTAINER_IP="10.1.1.120"
-CONTAINER_NETMASK="255.255.255.0"
-CONTAINER_GATEWAY="10.1.1.1"
-CONTAINER_DNS1="8.8.8.8"
-CONTAINER_DNS2="8.8.4.4"
 CONTAINER_HOSTNAME="stock-analysis"
 CONTAINER_DOMAIN="local"
 
@@ -42,12 +37,7 @@ iface lo inet loopback
 
 # The primary network interface
 auto eth0
-iface eth0 inet static
-    address $CONTAINER_IP
-    netmask $CONTAINER_NETMASK
-    gateway $CONTAINER_GATEWAY
-    dns-nameservers $CONTAINER_DNS1 $CONTAINER_DNS2
-    dns-search $CONTAINER_DOMAIN
+iface eth0 inet dhcp
 EOF
 
 # Set hostname
@@ -65,12 +55,12 @@ ff02::1 ip6-allnodes
 ff02::2 ip6-allrouters
 EOF
 
-# Configure DNS resolution
-cat > /etc/resolv.conf << EOF
-search $CONTAINER_DOMAIN
-nameserver $CONTAINER_DNS1
-nameserver $CONTAINER_DNS2
-EOF
+# DNS will be configured by DHCP
+# Remove any static DNS configuration if needed
+if [ -f /etc/resolv.conf ] && grep -q "# Static DNS" /etc/resolv.conf; then
+    log_info "Removing static DNS configuration..."
+    > /etc/resolv.conf
+fi
 
 # Disable cloud-init network configuration if present
 if [ -d /etc/cloud ]; then
@@ -86,19 +76,40 @@ else
     ifup eth0
 fi
 
-# Wait for network to come up
-sleep 3
+# Wait for network to come up and DHCP to assign IP
+sleep 5
 
 # Verify configuration
 echo -e "\n${GREEN}Network configuration applied:${NC}"
 echo "Hostname: $(hostname)"
-echo "IP Address: $(ip addr show eth0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}')"
-echo "Gateway: $(ip route | grep default | awk '{print $3}')"
-echo "DNS Servers: $(grep nameserver /etc/resolv.conf | awk '{print $2}' | tr '\n' ' ')"
+
+# Get IP address assigned by DHCP
+IP_ADDR=$(ip -4 addr show eth0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}')
+if [ -n "$IP_ADDR" ]; then
+    echo "IP Address (DHCP): $IP_ADDR"
+else
+    echo -e "${RED}No IP address assigned yet${NC}"
+fi
+
+# Get gateway from DHCP
+GATEWAY=$(ip route | grep default | awk '{print $3}')
+if [ -n "$GATEWAY" ]; then
+    echo "Gateway: $GATEWAY"
+else
+    echo -e "${RED}No gateway configured${NC}"
+fi
+
+# Get DNS servers from DHCP
+DNS_SERVERS=$(grep nameserver /etc/resolv.conf 2>/dev/null | awk '{print $2}' | tr '\n' ' ')
+if [ -n "$DNS_SERVERS" ]; then
+    echo "DNS Servers: $DNS_SERVERS"
+else
+    echo -e "${RED}No DNS servers configured${NC}"
+fi
 
 # Test connectivity
 echo -e "\nTesting network connectivity..."
-if ping -c 1 -W 2 $CONTAINER_GATEWAY &>/dev/null; then
+if [ -n "$GATEWAY" ] && ping -c 1 -W 2 "$GATEWAY" &>/dev/null; then
     echo -e "${GREEN}✓ Gateway reachable${NC}"
 else
     echo -e "${RED}✗ Gateway unreachable${NC}"

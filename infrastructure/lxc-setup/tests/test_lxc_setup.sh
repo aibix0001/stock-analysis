@@ -64,11 +64,20 @@ test_debian_version() {
 test_network_config() {
     log_test "Checking network configuration"
     
-    # Check if IP is configured
-    if ip addr show | grep -q "10.1.1.120/24"; then
-        log_pass "Correct IP address configured: 10.1.1.120/24"
+    # Check if IP is configured via DHCP
+    ip_addr=$(ip -4 addr show eth0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}')
+    if [ -n "$ip_addr" ]; then
+        log_pass "IP address assigned via DHCP: $ip_addr"
     else
-        log_fail "Expected IP 10.1.1.120/24 not found"
+        log_fail "No IP address assigned via DHCP"
+    fi
+    
+    # Check if we have a default gateway
+    gateway=$(ip route | grep default | awk '{print $3}')
+    if [ -n "$gateway" ]; then
+        log_pass "Default gateway configured: $gateway"
+    else
+        log_fail "No default gateway configured"
     fi
     
     # Check hostname
